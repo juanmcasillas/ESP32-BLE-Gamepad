@@ -7,6 +7,10 @@
 #include "BLEHIDDevice.h"
 #include "BLECharacteristic.h"
 
+// Added 128 buttons in index-way
+// Added 8 axis
+// Added 4 pov hats
+
 
 
 #define BUTTON_1      0x1
@@ -163,7 +167,7 @@ public:
   BleGamepad(std::string deviceName = "ESP32 BLE Gamepad", std::string deviceManufacturer = "Espressif", uint8_t batteryLevel = 100);
   void begin(void);
   void end(void);
-  void setAxes(signed char x, signed char y, signed char a1, signed char a2, signed char a3, signed char a4, signed char a5, signed char a6, signed char a7, signed char a8, signed char hat1, signed char hat2, signed char hat3, signed char hat4);
+  void setAxes(int16_t x, int16_t y, int16_t a1, int16_t a2, int16_t a3, int16_t a4, int16_t a5, int16_t a6,int16_t a7, int16_t a8, signed char hat1, signed char hat2, signed char hat3, signed char hat4);
   void press(uint8_t b = BUTTON_1);   // press BUTTON_1 by default
   void release(uint8_t b = BUTTON_1); // release BUTTON_1 by default
   bool isPressed(uint8_t b = BUTTON_1); // check BUTTON_1 by default
