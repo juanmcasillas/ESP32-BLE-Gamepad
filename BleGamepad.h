@@ -150,26 +150,30 @@
 
 class BleGamepad {
 private:
-  uint64_t _buttons[2]; // 2x64 -> 128 bytes) [0: 0-64, 1->64-128]
+  uint8_t _buttons[16]; // 2x64 -> 128 bytes) [0: 0-64, 1->64-128]
 
   BleConnectionStatus* connectionStatus;
   BLEHIDDevice* hid;
   BLECharacteristic* inputGamepad;
   void rawAction(uint8_t msg[], char msgSize);
   static void taskServer(void* pvParameter);
+  
+
 public:
   BleGamepad(std::string deviceName = "ESP32 BLE Gamepad", std::string deviceManufacturer = "Espressif", uint8_t batteryLevel = 100);
   void begin(void);
   void end(void);
-  void setAxes(signed char x, signed char y, signed char a1, signed char a2, signed char a3, signed char a4, signed char a5, signed char a6, signed char a7, signed char a8, signed char hat);
+  void setAxes(signed char x, signed char y, signed char a1, signed char a2, signed char a3, signed char a4, signed char a5, signed char a6, signed char a7, signed char a8, signed char hat1, signed char hat2, signed char hat3, signed char hat4);
   void press(uint8_t b = BUTTON_1);   // press BUTTON_1 by default
   void release(uint8_t b = BUTTON_1); // release BUTTON_1 by default
   bool isPressed(uint8_t b = BUTTON_1); // check BUTTON_1 by default
   bool isConnected(void);
   void setBatteryLevel(uint8_t level);
+  void resetButtons();
   uint8_t batteryLevel;
   std::string deviceManufacturer;
   std::string deviceName;
+  void print64(uint64_t num, int base=DEC);
 };
 
 #endif // CONFIG_BT_ENABLED

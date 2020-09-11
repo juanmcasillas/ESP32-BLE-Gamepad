@@ -8,6 +8,7 @@
 #include <driver/adc.h>
 #include "sdkconfig.h"
 
+#include <hardwareSerial.h>
 #include "BleConnectionStatus.h"
 #include "BleGamepad.h"
 
@@ -27,7 +28,7 @@ static const uint8_t _hidReportDescriptor[] = {
   USAGE(1),            0x01, //   USAGE (Pointer)
   COLLECTION(1),       0x00, //   COLLECTION (Physical)
   REPORT_ID(1),        0x01, //     REPORT_ID (1)
-  // ------------------------------------------------- Buttons (1 to 128)
+  // ------------------------------------------------- Buttons (1 to 32)
   USAGE_PAGE(1),       0x09, //     USAGE_PAGE (Button)
   USAGE_MINIMUM(1),    0x01, //     USAGE_MINIMUM (Button 1)
   USAGE_MAXIMUM(1),    0x80, //     USAGE_MAXIMUM (Button 128)
@@ -36,51 +37,65 @@ static const uint8_t _hidReportDescriptor[] = {
   REPORT_SIZE(1),      0x01, //     REPORT_SIZE (1)
   REPORT_COUNT(1),     0x80, //     REPORT_COUNT (128)
   HIDINPUT(1),         0x02, //     INPUT (Data, Variable, Absolute) ; 16 bytes
-
-  // ------------------------------------------------- Padding
-//  REPORT_SIZE(1),      0x01, //     REPORT_SIZE (1)
-//  REPORT_COUNT(1),     0x02, //     REPORT_COUNT (2)
-//  HIDINPUT(1),         0x03, //     INPUT (Constant, Variable, Absolute) ;2 bit padding
   // ------------------------------------------------- X/Y position, Z/rZ position
-
   USAGE_PAGE(1),       0x01, //     USAGE_PAGE (Generic Desktop)
   USAGE(1),            0x30, //     USAGE (X)
   USAGE(1),            0x31, //     USAGE (Y)
-  USAGE(1),            0x32, //     USAGE (analog1)
-  USAGE(1),            0x33, //     USAGE (analog2)
-  USAGE(1),            0x34, //     USAGE (analog3)
-  USAGE(1),            0x35, //     USAGE (analog4)
-  USAGE(1),            0x36, //     USAGE (analog5)
-  USAGE(1),            0x37, //     USAGE (analog6)
-  USAGE(1),            0x38, //     USAGE (analog7)
-  USAGE(1),            0x39, //     USAGE (analog8)
+  USAGE(1),            0x32, //     USAGE (Z)
+  USAGE(1),            0x35, //     USAGE (rZ)
   LOGICAL_MINIMUM(1),  0x81, //     LOGICAL_MINIMUM (-127)
   LOGICAL_MAXIMUM(1),  0x7f, //     LOGICAL_MAXIMUM (127)
   REPORT_SIZE(1),      0x08, //     REPORT_SIZE (8)
-  REPORT_COUNT(1),     0x08, //     REPORT_COUNT (10)
-  HIDINPUT(1),         0x02, //     INPUT (Data, Variable, Absolute) ;10 bytes (X,Y,a1,a2,a3,a4,a5,a6,a7,a8)
+  REPORT_COUNT(1),     0x04, //     REPORT_COUNT (4)
+  HIDINPUT(1),         0x02, //     INPUT (Data, Variable, Absolute) ;4 bytes (X,Y,Z,rZ)
 
-  USAGE_PAGE(1), 	     0x01, //     USAGE_PAGE (Generic Desktop)
+  USAGE_PAGE(1),       0x01, //     USAGE_PAGE (Generic Desktop)
+  USAGE(1),            0x33, //     USAGE (rX) Left Trigger
+  USAGE(1),            0x34, //     USAGE (rY) Right Trigger
+  USAGE(1),            0x36, //     USAGE (analog5) Slider
+  USAGE(1),            0x37, //     USAGE (analog6) Dial
+  LOGICAL_MINIMUM(1),  0x81, //     LOGICAL_MINIMUM (-127)
+  LOGICAL_MAXIMUM(1),  0x7f, //     LOGICAL_MAXIMUM (127)
+  REPORT_SIZE(1),      0x08, //     REPORT_SIZE (8)
+  REPORT_COUNT(1),     0x04, //     REPORT_COUNT (4)
+  HIDINPUT(1),         0x02, //     INPUT (Data, Variable, Absolute) ;4 bytes rX, rY
+
+  USAGE_PAGE(1),   	   0x01, //     USAGE_PAGE (Generic Desktop)
   USAGE(1), 		       0x39, //     USAGE (Hat switch)
   USAGE(1), 		       0x39, //     USAGE (Hat switch)
-  LOGICAL_MINIMUM(1),  0x01, //		  LOGICAL_MINIMUM (1)
+  USAGE(1), 		       0x39, //     USAGE (Hat switch)
+  USAGE(1), 		       0x39, //     USAGE (Hat switch)
+  LOGICAL_MINIMUM(1),  0x01, //		LOGICAL_MINIMUM (1)
   LOGICAL_MAXIMUM(1),  0x08, //     LOGICAL_MAXIMUM (8)
-  REPORT_SIZE(1), 	   0x04, //		  REPORT_SIZE (4)
-  REPORT_COUNT(1), 	   0x02, //	   	REPORT_COUNT (2)
-  HIDINPUT(1), 		   0x02, //		INPUT (Data, Variable, Absolute) ;1 byte Hat1, Hat2
+  REPORT_SIZE(1), 	   0x04, //		REPORT_SIZE (4)
+  REPORT_COUNT(1), 	   0x04, //		REPORT_COUNT (4)
+  HIDINPUT(1), 		     0x02, //		INPUT (Data, Variable, Absolute) ;2 byte Hat1, Hat2, Hat3, Hat4
  
-  END_COLLECTION(0),       // END_COLLECTION
-  END_COLLECTION(0)        // END_COLLECTION
+  END_COLLECTION(0),         //   END_COLLECTION
+  END_COLLECTION(0)          // END_COLLECTION
 };
 
-BleGamepad::BleGamepad(std::string deviceName, std::string deviceManufacturer, uint8_t batteryLevel)
+BleGamepad::BleGamepad(std::string deviceName, std::string deviceManufacturer, uint8_t batteryLevel):
+  hid(0)
 {
-  this->_buttons[0] = 0;
-  this->_buttons[1] = 0;
+  this->resetButtons();
   this->deviceName = deviceName;
   this->deviceManufacturer = deviceManufacturer;
   this->batteryLevel = batteryLevel;
   this->connectionStatus = new BleConnectionStatus();
+}
+
+void BleGamepad::resetButtons() {
+  memset(&_buttons,0,sizeof(_buttons));
+}
+
+void BleGamepad::print64(uint64_t num, int base) {
+   uint32_t low = num % 0xFFFFFFFF; 
+   uint32_t high = (num >> 32) % 0xFFFFFFFF;
+
+  Serial.print(high,base);
+  Serial.print("|");
+  Serial.print(low,base); 
 }
 
 void BleGamepad::begin(void)
@@ -92,14 +107,20 @@ void BleGamepad::end(void)
 {
 }
 
-void BleGamepad::setAxes(signed char x, signed char y, signed char a1, signed char a2, signed char a3, signed char a4, signed char a5, signed char a6, signed char a7, signed char a8, signed char hat)
+void BleGamepad::setAxes(signed char x, signed char y, signed char a1, signed char a2, signed char a3, signed char a4, signed char a5, signed char a6, signed char a7, signed char a8, signed char hat1, signed char hat2, signed char hat3, signed char hat4)
 {
   if (this->isConnected())
   {
-    uint8_t m[27];
     
-    m[0] = _buttons[0];
-	  m[1] = (_buttons[0] >> 8);
+
+
+    uint8_t m[26];
+    memset(&m,0,sizeof(m));
+
+    memcpy(&m, &_buttons, sizeof(_buttons));
+    /*
+    m[0] =  _buttons[0];
+    m[1] = (_buttons[0] >> 8);
 	  m[2] = (_buttons[0] >> 16);
 	  m[3] = (_buttons[0] >> 24);
     m[4] = (_buttons[0] >> 32); 
@@ -107,26 +128,28 @@ void BleGamepad::setAxes(signed char x, signed char y, signed char a1, signed ch
     m[6] = (_buttons[0] >> 48);
     m[7] = (_buttons[0] >> 56);
 
-    m[8] = _buttons[1];
-	  m[9] = (_buttons[1] >> 8);
+    m[8]  = _buttons[1];
+	  m[9]  = (_buttons[1] >> 8);
 	  m[10] = (_buttons[1] >> 16);
 	  m[11] = (_buttons[1] >> 24);
     m[12] = (_buttons[1] >> 32); 
     m[13] = (_buttons[1] >> 40);
     m[14] = (_buttons[1] >> 48);
     m[15] = (_buttons[1] >> 56);
-    
+    */
+
     m[16] = x;
     m[17] = y;
     m[18] = a1;
     m[19] = a2;
-    m[20] = a3;
-    m[21] = a4;
+	  m[20] = a3;
+	  m[21] = a4;
     m[22] = a5;
-    m[23] = a6;
-    m[24] = a6;
-    m[25] = a6;
-	  m[26] = hat;
+	  m[23] = a6;
+	  m[24] = hat1 | (hat2 << 4); // 1 and 2
+    m[25] = hat3 | (hat4 << 4); // 3 and 4 
+    
+    //memset(&m,0, sizeof(m));
     this->inputGamepad->setValue(m, sizeof(m));
     this->inputGamepad->notify();
   }
@@ -135,32 +158,49 @@ void BleGamepad::setAxes(signed char x, signed char y, signed char a1, signed ch
 // indexed button (1..128)
 void BleGamepad::press(uint8_t b)
 {
-  uint64_t bitmask = (1 << b);
-  char index = ( b > 64 ? 1 : 0);
-  uint64_t result = _buttons[index] | bitmask;
+
+  char index = (b-1) / 8;
+  char bit = (b-1) % 8;
+  uint8_t bitmask = (1 << bit);
+
+  uint8_t result = _buttons[index] | bitmask;
   if (result != _buttons[index]) {
     _buttons[index] = result;
-    this->setAxes(0,0,0,0,0,0,0,0,0,0,0);
+    this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0,0,0);
   }
+  /*
+  Serial.print(b); 
+  Serial.print(" ");
+  this->print64(bitmask, BIN);
+  Serial.print(" ");
+  this->print64(result, BIN);
+  Serial.print(" ");
+  this->print64(_buttons[0], BIN);
+  Serial.println(" ");
+  */
 }
 
 // indexed button (1..128)
 void BleGamepad::release(uint8_t b)
 {
-  uint64_t bitmask = (1 << b);
-  char index = ( b > 64 ? 1 : 0);
+  char index = (b-1) / 8;
+  char bit = (b-1) % 8;
+  uint8_t bitmask = (1 << bit);
+
   uint64_t result = _buttons[index] & ~bitmask;
-  if (result != _buttons[index]) {
+  //if (result != _buttons[index]) {
     _buttons[index] = result;
-    this->setAxes(0,0,0,0,0,0,0,0,0,0,0);
-  }
+    this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+  //}
 }
 
 // indexed button (1..128)
 bool BleGamepad::isPressed(uint8_t b)
 {
-  uint64_t bitmask = (1 << b);
-  char index = ( b > 64 ? 1 : 0);
+  char index = (b-1) / 8;
+  char bit = (b-1) % 8;
+  uint8_t bitmask = (1 << bit);
+
   if ((bitmask & _buttons[index]) > 0)
     return true;
   return false;
