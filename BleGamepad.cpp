@@ -43,14 +43,13 @@ static const uint8_t _hidReportDescriptor[] = {
   USAGE(1),            0x31, //     USAGE (Y)
   USAGE(1),            0x32, //     USAGE (Z)
   USAGE(1),            0x35, //     USAGE (rZ)
-  //LOGICAL_MINIMUM(1),  0x81, //     LOGICAL_MINIMUM (-127)
-  //LOGICAL_MAXIMUM(1),  0x7f, //     LOGICAL_MAXIMUM (127)
-  //REPORT_SIZE(1),      0x08, //     REPORT_SIZE (8)
+  LOGICAL_MINIMUM(1),  0x81, //     LOGICAL_MINIMUM (-127)
+  LOGICAL_MAXIMUM(1),  0x7f, //     LOGICAL_MAXIMUM (127)
+  REPORT_SIZE(1),      0x08, //     REPORT_SIZE (8)
   //REPORT_COUNT(1),     0x04, //     REPORT_COUNT (4)
- 
-  LOGICAL_MINIMUM(2),  0x00, 0x80, // LOGICAL_MINIMUM (-32767)
-  LOGICAL_MAXIMUM(2),  0xff, 0x7f, // LOGICAL_MAXIMUM (32767)
-  REPORT_SIZE(1),      0x10, //     REPORT_SIZE (16)
+  //LOGICAL_MINIMUM(2),  0x01, 0x80, // LOGICAL_MINIMUM (-32767)
+  //LOGICAL_MAXIMUM(2),  0xff, 0x7f, // LOGICAL_MAXIMUM (32767)
+  //REPORT_SIZE(1),      0x10, //     REPORT_SIZE (16)
   REPORT_COUNT(1),     0x04, //     REPORT_COUNT (4)
  
   HIDINPUT(1),         0x02, //     INPUT (Data, Variable, Absolute) ;4 bytes (X,Y,Z,rZ) (8 bytes)
@@ -60,13 +59,13 @@ static const uint8_t _hidReportDescriptor[] = {
   USAGE(1),            0x34, //     USAGE (rY) Right Trigger
   USAGE(1),            0x36, //     USAGE (analog5) Slider
   USAGE(1),            0x37, //     USAGE (analog6) Dial
-  //LOGICAL_MINIMUM(1),  0x81, //     LOGICAL_MINIMUM (-127)
-  //LOGICAL_MAXIMUM(1),  0x7f, //     LOGICAL_MAXIMUM (127)
-  //REPORT_SIZE(1),      0x08, //     REPORT_SIZE (8)
+  LOGICAL_MINIMUM(1),  0x81, //     LOGICAL_MINIMUM (-127)
+  LOGICAL_MAXIMUM(1),  0x7f, //     LOGICAL_MAXIMUM (127)
+  REPORT_SIZE(1),      0x08, //     REPORT_SIZE (8)
   //REPORT_COUNT(1),     0x04, //     REPORT_COUNT (4)
-  LOGICAL_MINIMUM(2),  0x00, 0x80, // LOGICAL_MINIMUM (-32767)
-  LOGICAL_MAXIMUM(2),  0xff, 0x7f, // LOGICAL_MAXIMUM (32767)
-  REPORT_SIZE(1),      0x10, //     REPORT_SIZE (16)
+  //LOGICAL_MINIMUM(2),  0x01, 0x80, // LOGICAL_MINIMUM (-32767)
+  //LOGICAL_MAXIMUM(2),  0xff, 0x7f, // LOGICAL_MAXIMUM (32767)
+  //REPORT_SIZE(1),      0x10, //     REPORT_SIZE (16)
   REPORT_COUNT(1),     0x04, //     REPORT_COUNT (4)
   HIDINPUT(1),         0x02, //     INPUT (Data, Variable, Absolute) ;4 bytes rX, rY (8 bytes)
 
@@ -124,7 +123,7 @@ void BleGamepad::setAxes(int16_t x, int16_t y, int16_t a1, int16_t a2, int16_t a
     
 
 
-    uint8_t m[34]; // 26
+    uint8_t m[26]; // 34
     memset(&m,0,sizeof(m));
 
     memcpy(&m, &_buttons, sizeof(_buttons));
@@ -148,6 +147,7 @@ void BleGamepad::setAxes(int16_t x, int16_t y, int16_t a1, int16_t a2, int16_t a
     m[15] = (_buttons[1] >> 56);
     */
    // test high res
+    /*
     m[16] = x;
     m[17] = (x >>8);
     m[18] = y;
@@ -166,8 +166,17 @@ void BleGamepad::setAxes(int16_t x, int16_t y, int16_t a1, int16_t a2, int16_t a
     m[29] = (a5 >>8);
 	  m[30] = a6;
     m[31] = (a6 >>8);
-	  m[32] = hat1 | (hat2 << 4); // 1 and 2
-    m[33] = hat3 | (hat4 << 4); // 3 and 4 
+    */
+    m[16] = x;
+    m[17] = y;
+    m[18] = a1;
+    m[19] = a2;
+    m[20] = a3; // 20
+    m[21] = a4;
+    m[22] = a5;
+    m[23] = a6;
+    m[24] = hat1 | (hat2 << 4); // 1 and 2
+    m[25] = hat3 | (hat4 << 4); // 3 and 4 
     
     //memset(&m,0, sizeof(m));
     this->inputGamepad->setValue(m, sizeof(m));
