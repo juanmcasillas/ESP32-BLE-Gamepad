@@ -116,7 +116,7 @@ void BleGamepad::end(void)
 {
 }
 
-void BleGamepad::setAxes(int16_t x, int16_t y, int16_t a1, int16_t a2, int16_t a3, int16_t a4, int16_t a5, int16_t a6, int16_t a7, int16_t a8, signed char hat1, signed char hat2, signed char hat3, signed char hat4)
+void BleGamepad::setAxes(int16_t x, int16_t y, int16_t a1, int16_t a2, int16_t a3, int16_t a4, int16_t a5, int16_t a6, signed char hat1, signed char hat2, signed char hat3, signed char hat4)
 {
   if (this->isConnected())
   {
@@ -169,12 +169,12 @@ void BleGamepad::setAxes(int16_t x, int16_t y, int16_t a1, int16_t a2, int16_t a
     */
     m[16] = x;
     m[17] = y;
-    m[18] = a1;
-    m[19] = a2;
-    m[20] = a3; // 20
-    m[21] = a4;
-    m[22] = a5;
-    m[23] = a6;
+    m[18] = a1; // z
+    m[19] = a2; // rx
+    m[20] = a3; // ry
+    m[21] = a4; // rz
+    m[22] = a5; // slider
+    m[23] = a6; // dial
     m[24] = hat1 | (hat2 << 4); // 1 and 2
     m[25] = hat3 | (hat4 << 4); // 3 and 4 
     
@@ -195,7 +195,7 @@ void BleGamepad::press(uint8_t b)
   uint8_t result = _buttons[index] | bitmask;
   if (result != _buttons[index]) {
     _buttons[index] = result;
-    this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+    this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0);
   }
   /*
   Serial.print(b); 
@@ -219,7 +219,7 @@ void BleGamepad::release(uint8_t b)
   uint64_t result = _buttons[index] & ~bitmask;
   //if (result != _buttons[index]) {
     _buttons[index] = result;
-    this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+    this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0);
   //}
 }
 
