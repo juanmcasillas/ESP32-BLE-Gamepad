@@ -195,7 +195,7 @@ void BleGamepad::press(uint8_t b)
   uint8_t result = _buttons[index] | bitmask;
   if (result != _buttons[index]) {
     _buttons[index] = result;
-    this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0);
+    //this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0);
   }
   /*
   Serial.print(b); 
@@ -219,7 +219,7 @@ void BleGamepad::release(uint8_t b)
   uint64_t result = _buttons[index] & ~bitmask;
   //if (result != _buttons[index]) {
     _buttons[index] = result;
-    this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0);
+    //this->setAxes(0,0,0,0,0,0,0,0,0,0,0,0);
   //}
 }
 
